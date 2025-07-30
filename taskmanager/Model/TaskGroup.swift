@@ -8,7 +8,7 @@
 import Foundation
 
 
-struct TaskGroup: Identifiable {
+struct TaskGroup: Identifiable, Hashable {
     let id =  UUID()
     var title : String
     let creationDate: Date
