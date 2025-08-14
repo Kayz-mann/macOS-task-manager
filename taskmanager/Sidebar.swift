@@ -24,12 +24,20 @@ struct Sidebar: View {
                         Image(systemName: "folder")
                         TextField("New Group", text: $group.title)
                     }
-                    .tag(TaskSection.list((group)))
+                    .tag(TaskSection.list((group))
+                        .contextMenu {
+                            Button("Delete", role: .destructive) {
+                                if let index =  userCreatedGroups.firstIndex(where: {$0.id == group.id}) {
+                                    userCreatedGroups.remove(at: index)
+                                }
+                            }
+                        }
+                    )
                 }
             }
         } .safeAreaInset(edge: .bottom) {
             Button(action: {
-                let newGroup =  TaskGroup(title: "New Group", creationDate: Date())
+                let newGroup =  TaskGroup(title: "New Group")
                 userCreatedGroups.append(newGroup)
             }, label: {
                 Label("Add Group", systemImage: "plus.circle")
@@ -38,10 +46,11 @@ struct Sidebar: View {
             .foregroundStyle(.blue)
             .padding()
             .frame(maxWidth: .infinity, alignment: .leading)
+            .keyboardShortcut(KeyEquivalent("n"), modifiers: .command)
         }   }
 }
 
 #Preview {
     @Previewable @State var previewSelection = TaskSection.all
-    Sidebar(userCreatedGroups: TaskGroup.examples(), selection: $previewSelection)
-}
+        @Previewable @State var previewGroups = TaskGroup.examples()
+        return Sidebar(userCreatedGroups: $previewGroups, selection: $previewSelection)}
