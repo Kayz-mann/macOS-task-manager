@@ -20,5 +20,5 @@ struct ArchiveTaskListView: View {
 }
 
 #Preview {
-    TaskListView(title: "All", tasks: Task.examples())
+    TaskListView(title: "All", tasks: .constant(Task.examples()))
 }

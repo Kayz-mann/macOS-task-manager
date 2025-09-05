@@ -12,7 +12,7 @@ enum TaskSection: Identifiable, CaseIterable, Hashable {
     case all
     case done
     case upcoming
-    case list(TaskGroup)
+    case list(CDTaskGroup)
     
     var id: String {
         switch self {
@@ -23,7 +23,7 @@ enum TaskSection: Identifiable, CaseIterable, Hashable {
             case .upcoming:
                 "upcoming"
             case .list(let taskGroup):
-                taskGroup.id.uuidString
+            taskGroup.uuid.uuidString
         }
     }
     
@@ -59,5 +59,12 @@ enum TaskSection: Identifiable, CaseIterable, Hashable {
     
     static func == (lhs: TaskSection, rhs: TaskSection) -> Bool {
         lhs.id == rhs.id
+    }
+    
+    static var initialValue: TaskSection? {
+//        if os(macOS)
+        TaskSection.all
+//        else
+        
     }
 }

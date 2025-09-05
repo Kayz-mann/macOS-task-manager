@@ -6,51 +6,55 @@
 //
 
 import SwiftUI
+import CoreData
 
 struct Sidebar: View {
-    @Binding var userCreatedGroups: [TaskGroup]
-    @Binding var selection:  TaskSection
+    @FetchRequest(fetchRequest: CDTaskGroup.fetch(), animation: .bouncy)
+    var taskGroups: FetchedResults<CDTaskGroup>
+
+    
+    @Binding var selection: TaskSection
+    
     var body: some View {
-        List(selection: $selection){
+        List(selection: $selection) {
             Section("Favorites") {
-                ForEach(TaskSection.allCases) {section in
-                    Label(section.displayName, systemImage: section.iconName).tag(selection)}
+                ForEach(TaskSection.allCases) { section in
+                    Label(section.displayName, systemImage: section.iconName)
+                        .tag(section)
+                }
             }
             
             Section("Your Groups") {
-                ForEach($userCreatedGroups) {
-                    $group in
-                    HStack{
-                        Image(systemName: "folder")
-                        TextField("New Group", text: $group.title)
-                    }
-                    .tag(TaskSection.list((group))
-                        .contextMenu {
-                            Button("Delete", role: .destructive) {
-                                if let index =  userCreatedGroups.firstIndex(where: {$0.id == group.id}) {
-                                    userCreatedGroups.remove(at: index)
-                                }
-                            }
-                        }
-                    )
-                }
-            }
-        } .safeAreaInset(edge: .bottom) {
+                       ForEach(taskGroups) { group in
+                           TaskGroupRow(taskGroup: group)
+                               .tag(TaskSection.list(group))
+                               .contextMenu {
+                                   Button("Delete", role: .destructive) {
+                                       CDTaskGroup.delete(taskGroup: group)
+                                   }
+                               }
+                       }
+                   }
+               }        .safeAreaInset(edge: .bottom) {
             Button(action: {
-                let newGroup =  TaskGroup(title: "New Group")
-                userCreatedGroups.append(newGroup)
-            }, label: {
+                let newGroup = CDTaskGroup(title: "New Group", context: PersistenceController.shared.container.viewContext)
+                // Save the context after creating the new group
+                try? PersistenceController.shared.container.viewContext.save()
+            }) {
                 Label("Add Group", systemImage: "plus.circle")
-            })
+            }
             .buttonStyle(.borderless)
             .foregroundStyle(.blue)
             .padding()
             .frame(maxWidth: .infinity, alignment: .leading)
             .keyboardShortcut(KeyEquivalent("n"), modifiers: .command)
-        }   }
+        }
+    }
 }
 
 #Preview {
     @Previewable @State var previewSelection = TaskSection.all
-        @Previewable @State var previewGroups = TaskGroup.examples()
-        return Sidebar(userCreatedGroups: $previewGroups, selection: $previewSelection)}
+    
+    return Sidebar(selection: $previewSelection)
+        .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+}
