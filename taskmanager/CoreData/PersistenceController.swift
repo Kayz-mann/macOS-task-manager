@@ -33,6 +33,10 @@ struct PersistenceController {
         for index in 0..<10 {
             let task =  CDTask(title: "new task \(index)", dueDate: Date(), context: context)
         }
+//        show one done task by default
+        let doneTask  =  CDTask(title: "Done", dueDate: Date(), context: context)
+        doneTask.isCompleted.toggle()
+        
         return controller
     }()
 }

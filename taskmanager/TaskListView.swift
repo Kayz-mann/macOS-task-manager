@@ -6,21 +6,67 @@
 //
 
 import SwiftUI
+import CoreData
 
 struct TaskListView: View {
     let title: String
-    @Binding var tasks: [Task]
+    @FetchRequest(fetchRequest: CDTask.fetch()) var tasks
     @State private var inspectorIsShown: Bool = false
-    @State private var selectedTask: Task? = nil
+    @State private var selectedTask: CDTask? = nil
+    @Environment(\.managedObjectContext) var context
+    
+    // Keep the currently selected group (if any)
+    private let selectedGroup: CDTaskGroup?
+    
+    init(title: String, selection: TaskSection?, searchTerm: String? ) {
+        self.title = title
+        
+        var request = CDTask.fetch()
+        if searchTerm!.isEmpty {
+            
+        } else {
+            request.predicate = NSPredicate(
+        }
+    
+        switch selection {
+        case .all:
+            request.predicate = nil
+        case .done:
+            request.predicate = NSPredicate(format: "isCompleted == true")
+        case .upcoming:
+            request.predicate = NSPredicate(format: "isCompleted == false")
+        case .list(let group):
+            // Compare against the relationship object
+            request.predicate = NSPredicate(format: "group == %@", group)
+        case nil:
+            request.predicate = nil
+        }
+        
+        switch selection {
+        case .all, .done, .upcoming:
+            self.selectedGroup = nil
+        case .list(let group):
+            self.selectedGroup = group
+        case nil:
+            self.selectedGroup = nil
+        }
+        
+        self._tasks = FetchRequest(fetchRequest: request)
+    }
     
     var body: some View {
-        List($tasks) { $task in
-            TaskView(task: $task, selectedTask: $selectedTask, inspectorIsShown: $inspectorIsShown)
+        List(tasks) { task in
+            TaskRow(task: task)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    selectedTask = task
+                }
         }
         .toolbar {
             ToolbarItemGroup {
                 Button {
-                    tasks.append(Task(title: "New Task"))
+                    let task =  CDTask(title: "New", dueDate: Date(), context: context)
+                    task.group = selectedGroup
                 } label: {
                     Label("Add New Task", systemImage: "plus")
                 }
@@ -30,24 +76,20 @@ struct TaskListView: View {
                 } label: {
                     Label("Add inspector", systemImage: "sidebar.right")
                 }
-
-
             }
         }
         .inspector(isPresented: $inspectorIsShown) {
             if let selectedTask {
                 Text(selectedTask.title).font(.title)
-            }    else {
+            } else {
                 Text("nothing selected")
-                
             }
-        }.frame(minWidth: 100, maxWidth: .infinity)
-        
-      
-        
+        }
+        .frame(minWidth: 100, maxWidth: .infinity)
     }
 }
 
 #Preview {
-    TaskListView(title: "All", tasks: .constant(Task.examples()))
+    TaskListView(title: "All", selection: .list(CDTaskGroup.example), searchTerm: "")
+        .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
 }

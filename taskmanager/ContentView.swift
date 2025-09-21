@@ -15,20 +15,19 @@ struct ContentView: View {
     
     var body: some View {
            NavigationSplitView {
-               Sidebar(userCreatedGroups: $userCreatedGroups, selection: $selection)
+               Sidebar(selection: $selection)
                    .navigationTitle("Your Tasks")
            } detail: {
                if searchTerm.isEmpty {
                    switch selection {
-                   case .all:
-                       TaskListView(title: "All", tasks: $allTasks)
-                   case .done:
-                       ArchiveTaskListView(title: "Done", tasks: allTasks.filter { $0.isCompleted })
-                   case .upcoming:
-                       ArchiveTaskListView(title: "Upcoming", tasks: allTasks.filter { !$0.isCompleted })
+                   case .all, .done, .upcoming:
+                       TaskListView(title: "All", selection: selection)
+     
                    case .list(let taskGroup):
 //                       ArchiveTaskListView(title: taskGroup.title, tasks: taskGroup.tasks)
                        Text("placeholder")
+//                   case .none:
+//                       Text("none")
                    }
                } else {
                    ArchiveTaskListView(title: "Search Results", tasks: allTasks.filter { $0.title.contains(searchTerm) })

@@ -16,20 +16,20 @@ extension CDTask {
         #if DEBUG
         uuid_!
         #else
-        uuide_ ?? UUID()
+        uuid_ ?? UUID()
         #endif
     }
     var title: String {
-        get {title_ ?? ""}
-        set {title_ = newValue }
+        get { title_ ?? "" }
+        set { title_ = newValue }
     }
     
     var dueDate: Date {
-        get {dueDate_ ?? Date()}
-        set{ dueDate_ = newValue}
+        get { dueDate_ ?? Date() }
+        set { dueDate_ = newValue }
     }
     
-    convenience init(title: String, dueDate: Date, context:NSManagedObjectContext) {
+    convenience init(title: String, dueDate: Date, context: NSManagedObjectContext) {
         self.init(context: context)
         self.title = title
         self.dueDate = dueDate
@@ -40,26 +40,27 @@ extension CDTask {
     }
     
     static func delete(task: CDTask) {
-        guard let context =  task.managedObjectContext else {return}
-        
+        guard let context = task.managedObjectContext else { return }
         context.delete(task)
     }
     
-    static func fetch(_ predicate: NSPredicate =  .all) -> NSFetchRequest<CDTask> {
-        let request =  CDTask.fetchRequest()
-        request.sortDescriptors = [NSSortDescriptor(keyPath: \CDTask.dueDate_, ascending: true ), NSSortDescriptor(keyPath: \CDTask.title, ascending: true)]
-        
+    static func fetch(_ predicate: NSPredicate = .all) -> NSFetchRequest<CDTask> {
+        let request = CDTask.fetchRequest()
+        // Sort on the stored attributes, not computed properties
+        request.sortDescriptors = [
+            NSSortDescriptor(keyPath: \CDTask.dueDate_, ascending: true),
+            NSSortDescriptor(keyPath: \CDTask.title_, ascending: true)
+        ]
         request.predicate = predicate
-        
         return request
     }
     
     //    MARK: - SwiftUI preview helper
     static var example: CDTask {
-        let context  =  PersistenceController.preview.container.viewContext
-        let task =  CDTask(title: "Example Task", dueDate: Date(), context: context)
-        
+        let context  = PersistenceController.preview.container.viewContext
+        let task = CDTask(title: "Example Task", dueDate: Date(), context: context)
         return task
     }
 
 }
+
