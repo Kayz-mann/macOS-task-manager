@@ -32,11 +32,12 @@ extension CDTask {
         set { dueDate_ = newValue }
     }
     
-    // Bridged non-optional Bool for Core Data's optional storage (e.g., isCompleted_)
-    var isCompleted: Bool {
-        get { isCompleted_?.boolValue ?? false }
-        set { isCompleted_ = NSNumber(value: newValue) }
-    }
+    // NOTE:
+    // Remove the computed bridge for isCompleted because the model already
+    // exposes `@NSManaged public var isCompleted: Bool` (no underscore).
+    // Keeping a computed property named `isCompleted` causes a redeclaration error.
+    // Also, `isCompleted_` does not exist in the generated class, which caused
+    // the "Cannot find 'isCompleted_' in scope" error.
     
     // If your model defines a to-one relationship named "subTask" (generated as subTask_ : CDTask?),
     // expose it as an optional CDTask here.
@@ -65,6 +66,7 @@ extension CDTask {
         self.title = title
         self.dueDate = dueDate
         // Provide sensible defaults on creation
+        // Use the generated `isCompleted` property directly.
         self.isCompleted = false
     }
     
@@ -110,4 +112,3 @@ extension CDTask: Comparable {
         lhs.title < rhs.title_ ?? ""
     }
 }
-

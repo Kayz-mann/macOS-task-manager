@@ -58,7 +58,7 @@ struct TaskListView: View {
     
     var body: some View {
         List(tasks) { task in
-            TaskRow(task: task, selectedTask: selectedTask, inspectorIsShown: inspectorIsShown)
+            TaskRow(task: task, selectedTask: $selectedTask, inspectorIsShown: $inspectorIsShown)
                 .foregroundColor(selectedTask == task ? .accentColor : .gray)
                 .contentShape(Rectangle())
                 .onTapGesture {
