@@ -10,7 +10,7 @@ import CoreData
 
 struct TaskListView: View {
     let title: String
-    @FetchRequest(fetchRequest: CDTask.fetch()) var tasks
+    @FetchRequest(fetchRequest: CDTask.fetch(), animation: .bouncy) var tasks
     @State private var inspectorIsShown: Bool = false
     @State private var selectedTask: CDTask? = nil
     @Environment(\.managedObjectContext) var context
@@ -23,24 +23,26 @@ struct TaskListView: View {
         
         var request = CDTask.fetch()
         if searchTerm!.isEmpty {
+            switch selection {
+            case .all:
+                request.predicate = nil
+            case .done:
+                request.predicate = NSPredicate(format: "isCompleted == true")
+            case .upcoming:
+                request.predicate = NSPredicate(format: "isCompleted == false")
+            case .list(let group):
+                // Compare against the relationship object
+                request.predicate = NSPredicate(format: "group == %@", group)
+            case nil:
+                request.predicate = nil
+            }
+
             
         } else {
-            request.predicate = NSPredicate(
+            request.predicate = NSPredicate(format: "%K CONTAINS[cd] %@",
+                                            "title_", searchTerm! as CVarArg)
         }
     
-        switch selection {
-        case .all:
-            request.predicate = nil
-        case .done:
-            request.predicate = NSPredicate(format: "isCompleted == true")
-        case .upcoming:
-            request.predicate = NSPredicate(format: "isCompleted == false")
-        case .list(let group):
-            // Compare against the relationship object
-            request.predicate = NSPredicate(format: "group == %@", group)
-        case nil:
-            request.predicate = nil
-        }
         
         switch selection {
         case .all, .done, .upcoming:
@@ -56,7 +58,8 @@ struct TaskListView: View {
     
     var body: some View {
         List(tasks) { task in
-            TaskRow(task: task)
+            TaskRow(task: task, selectedTask: selectedTask, inspectorIsShown: inspectorIsShown)
+                .foregroundColor(selectedTask == task ? .accentColor : .gray)
                 .contentShape(Rectangle())
                 .onTapGesture {
                     selectedTask = task
@@ -67,6 +70,7 @@ struct TaskListView: View {
                 Button {
                     let task =  CDTask(title: "New", dueDate: Date(), context: context)
                     task.group = selectedGroup
+                    PersistenceController.shared.save()
                 } label: {
                     Label("Add New Task", systemImage: "plus")
                 }
@@ -80,9 +84,9 @@ struct TaskListView: View {
         }
         .inspector(isPresented: $inspectorIsShown) {
             if let selectedTask {
-                Text(selectedTask.title).font(.title)
+TaskDetailView(task: selectedTask)
             } else {
-                Text("nothing selected")
+              ContentUnavailableView("Please select a task", systemImage: "circle.inset.filled")
             }
         }
         .frame(minWidth: 100, maxWidth: .infinity)

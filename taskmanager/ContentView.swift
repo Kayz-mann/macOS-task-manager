@@ -21,7 +21,7 @@ struct ContentView: View {
                if searchTerm.isEmpty {
                    switch selection {
                    case .all, .done, .upcoming:
-                       TaskListView(title: "All", selection: selection)
+                       TaskListView(title: "All", selection: selection, searchTerm: searchTerm)
      
                    case .list(let taskGroup):
 //                       ArchiveTaskListView(title: taskGroup.title, tasks: taskGroup.tasks)

@@ -25,6 +25,16 @@ struct PersistenceController {
             }}
     }
     
+    func save() {
+        let context =  container.viewContext
+        guard context .hasChanges else {return}
+        do{
+            try context.save()
+        } catch {
+            print("error saving context: \(error)")
+        }
+    }
+    
 //    MARK: - SwiftUI preview helper
     static var preview: PersistenceController =  {
         let controller =  PersistenceController(inMemory: true)
